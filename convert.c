@@ -3,6 +3,37 @@
 #include <string.h>
 #include <unistd.h>
 
+static const char *usage_string =
+    "Usage: ./atoip [ -r ] [ -p ] [ -e ] STRING [ STRING... ]";
+
+static const char *help_fmt =
+    "\033[7m\033[1mATOIP Converter\033[0m \n"
+    "\n"
+    "  %s\n"
+    "\n"
+    "\033[1mSummary\033[0m\n"
+    "  This program takes command line strings and outputs equivalent int \n"
+    "  arrays.\n"
+    "\n"
+    "  Each STRING is converted into an int [] array with ints corresponding\n"
+    "  to the chars in the string\n\n"
+    "  Additional STRING arguments will output more arrays. To keep\n"
+    "  everything\n"
+    "  in a single array, ensure it is a single argument\n"
+    "  \n"
+    "\033[1mOptions\033[0m\n"
+    "  The -r option reverses the endianness of the ints output in the array.\n"
+    "  By default it uses x86 Little-Endian output\n"
+    "\n"
+    "  The -p option pads final ints to have the same length as all others.\n"
+    "  Without the -p option the final int in the array\n"
+    "  will only be as long as needed, but with the -p option it will have\n"
+    "  additional 0s to be as long as all other ints\n"
+    "\n"
+    "  The -e option allows extended mode. By default you can only output 676\n"
+    "  arrays (26*26) but with the -e option you can have up to \n"
+    "  208,827,064,576 arrays (26^8)\n";
+
 struct options {
   int padded : 1;
   int reversed : 1;
@@ -10,7 +41,7 @@ struct options {
 };
 
 void usage() {
-  fprintf(stderr, "Usage: ./atoip [ -r ] [ -p ] [ -e ] STRING [ STRING... ]");
+  fprintf(stderr, "%s\n", usage_string);
   exit(1);
 }
 
@@ -31,7 +62,7 @@ struct options get_options(int *argc, char **argv[]) {
   char ch;
   struct options opts = {0};
   int count = 0;
-  while ((ch = getopt(*argc, *argv, "pr")) != -1) {
+  while ((ch = getopt(*argc, *argv, "prhe")) != -1) {
     switch (ch) {
     case 'p':
       opts.padded = 1;
@@ -45,6 +76,9 @@ struct options get_options(int *argc, char **argv[]) {
       opts.extended = 1;
       count++;
       break;
+    case 'h':
+      printf(help_fmt, usage_string);
+      exit(0);
     case '?':
     default:
       usage();
