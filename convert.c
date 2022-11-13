@@ -87,8 +87,8 @@ struct options get_options(int *argc, char **argv[]) {
       usage();
     }
   }
-  *argc -= count;
-  *argv += count;
+  *argc -= (optind - 1);
+  *argv += (optind - 1);
   return opts;
 }
 
