@@ -104,9 +104,11 @@ int main(int argc, char *argv[]) {
 
   char *ident = strdup(static_ident); // don't mutate a static string
 
+  static char const *const DIGIT_FMT = "%02x";
+
   for (int i = 1; i < argc; i++) {
     char *convertee = argv[i];
-    int length = strlen(convertee);
+    int length = strlen(convertee); // need the NUL byte
     int blocks = length / INT_SIZE;
     int extra = length % INT_SIZE;
 
@@ -115,7 +117,7 @@ int main(int argc, char *argv[]) {
       printf("0x");
       for (int j = 0; j < INT_SIZE; j++) {
         int block_offset = !opts.reversed ? INT_SIZE - j - 1 : j;
-        printf("%x", convertee[i * INT_SIZE + block_offset]);
+        printf(DIGIT_FMT, convertee[i * INT_SIZE + block_offset]);
       }
       if (((i + 1) < blocks) || extra)
         printf(", ");
@@ -123,14 +125,20 @@ int main(int argc, char *argv[]) {
 
     if (extra) {
       printf("0x");
-      if (opts.padded)
+      if (opts.padded && !opts.reversed)
         for (int i = 0; i < INT_SIZE - extra; i++)
           printf("00");
 
       for (int i = 0; i < extra; i++) {
         int block_offset = !opts.reversed ? extra - i - 1 : i;
-        printf("%x", convertee[length - extra + (block_offset)]);
+        printf(DIGIT_FMT, convertee[length - extra + (block_offset)]);
       }
+
+      if (opts.reversed)
+        for (int i = 0; i < INT_SIZE - extra; i++)
+          printf("00");
+    } else {
+      printf(", 0x0");
     }
 
     printf("};\n");
