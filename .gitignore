@@ -1,0 +1,7 @@
+build/
+Makefile
+CMakeFiles/
+cmake_install.cmake
+convert
+a.out
+CMakeCache.txt
