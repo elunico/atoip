@@ -95,10 +95,12 @@ struct options get_options(int *argc, char **argv[]) {
 int atoip(struct options opts, int scount, char *strings[]) {
   static char const *const DIGIT_FMT = "%02x";
   int maxlen = opts.extended ? 8 : 2;
-  char *static_ident = opts.extended ? "aaaaaaaa" : "aa";
+  char *static_ident = opts.extended ? "aaaaaaa`" : "a`";
 
   char *ident = strdup(static_ident); // don't mutate a static string
   for (int i = 0; i < scount; i++) {
+    try_increment(&ident, maxlen - 1);
+
     char *convertee = strings[i];
     int length = strlen(convertee); // need the NUL byte
     int blocks = length / INT_SIZE;
@@ -134,10 +136,9 @@ int atoip(struct options opts, int scount, char *strings[]) {
     }
 
     printf("};\n");
-
-    try_increment(&ident, maxlen - 1);
   }
   free(ident);
+  return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -146,6 +147,11 @@ int main(int argc, char *argv[]) {
     usage();
 
   struct options opts = get_options(&argc, &argv);
+
+  if (argc - 1 > 676 && !opts.extended) {
+    fputs("Error! Too many arguments. Use -e for extended mode\n", stderr);
+    return 2;
+  }
 
   atoip(opts, argc - 1, (char **)(argv + 1));
 }
