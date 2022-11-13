@@ -3,6 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 
+// static const int INT_SIZE = sizeof(int);
+#define INT_SIZE sizeof(int)
+
 static const char *usage_string =
     "Usage: ./atoip [ -r ] [ -p ] [ -e ] STRING [ STRING... ]";
 
@@ -89,6 +92,15 @@ struct options get_options(int *argc, char **argv[]) {
   return opts;
 }
 
+char *m_get_intfmt(int count) {
+  char *buf = malloc(2 * count + 1 + 2);
+  strcat(buf, "0x");
+  for (int i = 0; i < count; i++) {
+    strcat(buf + 2 + i * 2, "%x");
+  }
+  return buf;
+}
+
 int main(int argc, char *argv[]) {
 
   if (argc < 2)
@@ -101,17 +113,21 @@ int main(int argc, char *argv[]) {
 
   char *ident = strdup(static_ident); // don't mutate a static string
 
+  char *intfmt = m_get_intfmt(INT_SIZE);
+
   for (int i = 1; i < argc; i++) {
     char *convertee = argv[i];
     int length = strlen(convertee);
-    int blocks = length / 4;
-    int extra = length % 4;
+    int blocks = length / INT_SIZE;
+    int extra = length % INT_SIZE;
 
     printf("int %s[] = {", ident);
     for (int i = 0; i < blocks; i++) {
-      printf("0x%x%x%x%x", convertee[i * 4 + 3], convertee[i * 4 + 2],
-             convertee[i * 4 + 1], convertee[i * 4 + 0]);
-
+      printf("0x");
+      for (int j = 0; j < INT_SIZE; j++) {
+        int block_offset = opts.reversed ? INT_SIZE - j - 1 : j;
+        printf("%x", convertee[i * INT_SIZE + block_offset]);
+      }
       if (((i + 1) < blocks) || extra)
         printf(", ");
     }
@@ -119,11 +135,13 @@ int main(int argc, char *argv[]) {
     if (extra) {
       printf("0x");
       if (opts.padded)
-        for (int i = 0; i < 4 - extra; i++)
+        for (int i = 0; i < INT_SIZE - extra; i++)
           printf("00");
 
-      for (int i = 0; i < extra; i++)
-        printf("%x", convertee[length - extra + (extra - i - 1)]);
+      for (int i = 0; i < extra; i++) {
+        int block_offset = opts.reversed ? extra - i - 1 : i;
+        printf("%x", convertee[length - extra + (block_offset)]);
+      }
     }
 
     printf("};\n");
@@ -132,4 +150,5 @@ int main(int argc, char *argv[]) {
   }
 
   free(ident);
+  free(intfmt);
 }
