@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -138,7 +139,16 @@ int main(int argc, char *argv[]) {
   if (argc - 1 > 676 && !opts.extended) {
     fputs("Error! Too many arguments. Use -e for extended mode\n", stderr);
     return 2;
+  } else
+#if (INT_MAX >> 38) <= 1
+      if (argc == INT_MAX) {
+#else
+      if (argc >= 208827064576) {
+#endif
+    fputs("Error! Your shell is lying to you ;)\n", stderr);
+    return -42;
   }
 
+  // Drop executable name from the array of strings (argv) passed to atoip
   atoip(opts, argc - 1, (char **)(argv + 1));
 }
